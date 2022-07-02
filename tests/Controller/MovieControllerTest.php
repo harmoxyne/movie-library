@@ -2,7 +2,9 @@
 
 namespace App\Tests\Controller;
 
+use App\Entity\User;
 use App\Factory\MovieFactory;
+use App\Repository\UserRepository;
 use JsonException;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -19,11 +21,31 @@ class MovieControllerTest extends WebTestCase
         $this->client = static::createClient();
     }
 
+    public function testUnauthorizedCreatingMovieObject(): void
+    {
+        $this->callCreateMovie([]);
+        self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testUnauthorizedShowMovie(): void
+    {
+        $this->callShowMovie(-1);
+        self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testUnauthorizedGetMovies(): void
+    {
+        $this->callGetMovies();
+        self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+    }
+
     /**
      * @throws JsonException
      */
     public function testSuccessfulCreatingMovieObject(): void
     {
+        $this->enableUser();
+
         $expectedName = 'The Titanic';
         $expectedReleaseDate = '18-01-1998';
         $expectedDirector = 'James Cameron';
@@ -121,6 +143,8 @@ class MovieControllerTest extends WebTestCase
         string $expectedErrorKey,
         string $expectedErrorMessage
     ): void {
+        $this->enableUser();
+
         $response = $this->callCreateMovie($payload);
 
         self::assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
@@ -140,6 +164,8 @@ class MovieControllerTest extends WebTestCase
 
     public function testCreateMovieWithoutRatings(): void
     {
+        $this->enableUser();
+
         $payload = [
             'name' => 'The Titanic',
             'release_date' => '18-01-1998',
@@ -174,6 +200,8 @@ class MovieControllerTest extends WebTestCase
 
     public function testSuccessfulShowingMovie(): void
     {
+        $user = $this->enableUser();
+
         $expectedName = 'The Titanic';
         $expectedReleaseDate = '18-01-1998';
         $expectedDirector = 'James Cameron';
@@ -189,7 +217,7 @@ class MovieControllerTest extends WebTestCase
         /** @var MovieFactory $movieFactory */
         $movieFactory = static::getContainer()->get(MovieFactory::class);
 
-        $movie = $movieFactory->createFromRequest([
+        $movie = $movieFactory->createFromRequest($user, [
             'name' => $expectedName,
             'release_date' => $expectedReleaseDate,
             'director' => $expectedDirector,
@@ -234,6 +262,7 @@ class MovieControllerTest extends WebTestCase
 
     public function testShowingNotExistingMovie(): void
     {
+        $this->enableUser();
         $response = $this->callShowMovie(-1);
 
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
@@ -247,8 +276,46 @@ class MovieControllerTest extends WebTestCase
             'Response contain different error text than expected');
     }
 
+    public function testShowingMovieThatBelongsToAnotherUser(): void
+    {
+        $this->enableUser();
+
+        $owner = $this->getUser(1);
+
+        /** @var MovieFactory $movieFactory */
+        $movieFactory = static::getContainer()->get(MovieFactory::class);
+
+        $movie = $movieFactory->createFromRequest($owner, [
+            'name' => 'The Titanic',
+            'release_date' => '18-01-1998',
+            'director' => 'James Cameron',
+            'casts' => [
+                'DiCaprio',
+                'Kate Winslet',
+            ],
+            'ratings' => [
+                'imdb' => 7.8,
+                'rotten_tomatto' => 8.2,
+            ],
+        ]);
+
+        $response = $this->callShowMovie($movie->getId());
+
+        self::assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+
+        $responseData = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertArrayHasKey('errors', $responseData, 'Response does not contain "errors" array');
+        self::assertCount(1, $responseData['errors'], 'Response contain different amount of errors than expected');
+
+        self::assertEquals('Movie belongs to another user', $responseData['errors'][0],
+            'Response contain different error text than expected');
+    }
+
     public function testSuccessfulGetMovies(): void
     {
+        $this->enableUser();
+
         $response = $this->callGetMovies();
 
         self::assertResponseIsSuccessful();
@@ -286,6 +353,21 @@ class MovieControllerTest extends WebTestCase
         $this->client->request('GET', '/api/v1/movies');
 
         return $this->client->getResponse();
+    }
+
+    private function enableUser(): User
+    {
+        $user = $this->getUser();
+        $this->client->loginUser($user);
+
+        return $user;
+    }
+
+    private function getUser(int $id = 0): User
+    {
+        /** @var UserRepository $userRepository */
+        $userRepository = static::getContainer()->get(UserRepository::class);
+        return $userRepository->findAll()[$id];
     }
 
 }

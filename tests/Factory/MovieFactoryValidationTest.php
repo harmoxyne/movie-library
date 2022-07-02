@@ -2,6 +2,7 @@
 
 namespace App\Tests\Factory;
 
+use App\Entity\User;
 use App\Exception\ValidationException;
 use App\Factory\MovieFactory;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,7 +32,7 @@ class MovieFactoryValidationTest extends KernelTestCase
 
         $movieFactory = new MovieFactory($validator, $this->getEntityManagerMock());
 
-        self::assertNotEmpty($movieFactory->createFromRequest($request));
+        self::assertNotEmpty($movieFactory->createFromRequest($this->getUserMock(), $request));
     }
 
     public function testEmptyRatingsPassValidation(): void
@@ -55,7 +56,7 @@ class MovieFactoryValidationTest extends KernelTestCase
 
         $movieFactory = new MovieFactory($validator, $this->getEntityManagerMock());
 
-        self::assertNotEmpty($movieFactory->createFromRequest($request));
+        self::assertNotEmpty($movieFactory->createFromRequest($this->getUserMock(), $request));
     }
 
     public function testMissingNameThrowsValidationException(): void
@@ -79,7 +80,7 @@ class MovieFactoryValidationTest extends KernelTestCase
             ],
         ];
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     public function testMissingDirectorThrowsValidationException(): void
@@ -103,7 +104,7 @@ class MovieFactoryValidationTest extends KernelTestCase
             ],
         ];
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     public function testMissingReleaseDateThrowsValidationException(): void
@@ -127,7 +128,7 @@ class MovieFactoryValidationTest extends KernelTestCase
             ],
         ];
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     public function testMissingCastsThrowsValidationException(): void
@@ -148,7 +149,7 @@ class MovieFactoryValidationTest extends KernelTestCase
             ],
         ];
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     public function testMissingRatingsThrowsValidationException(): void
@@ -169,7 +170,7 @@ class MovieFactoryValidationTest extends KernelTestCase
             ],
         ];
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     public function testEmptyCastsThrowsValidationException(): void
@@ -191,11 +192,16 @@ class MovieFactoryValidationTest extends KernelTestCase
             ],
         ];
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     private function getEntityManagerMock(): EntityManagerInterface
     {
         return $this->createMock(EntityManagerInterface::class);
+    }
+
+    private function getUserMock(): User
+    {
+        return $this->createMock(User::class);
     }
 }

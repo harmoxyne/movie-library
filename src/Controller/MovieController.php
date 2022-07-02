@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Movie;
 use App\Entity\MovieCast;
 use App\Entity\MovieRating;
+use App\Entity\User;
 use App\Exception\ValidationException;
 use App\Factory\MovieFactory;
 use App\Repository\MovieRepository;
@@ -23,9 +24,11 @@ class MovieController extends AbstractController
     /**
      * @Route("/movies", name="app_movies", methods={"GET"})
      */
-    public function index(MovieRepository $movieRepository): JsonResponse
+    public function index(): JsonResponse
     {
-        $movieEntities = $movieRepository->findBy([]);
+        /** @var User $user */
+        $user = $this->getUser();
+        $movieEntities = $user->getMovies();
 
         $movies = [];
         foreach ($movieEntities as $movieEntity) {
@@ -40,6 +43,8 @@ class MovieController extends AbstractController
      */
     public function show(int $id, MovieRepository $movieRepository): JsonResponse
     {
+        $user = $this->getUser();
+
         $movie = $movieRepository->find($id);
 
         if ($movie === null) {
@@ -49,6 +54,15 @@ class MovieController extends AbstractController
                 ],
             ], Response::HTTP_NOT_FOUND);
         }
+
+        if ($movie->getUser() !== $user) {
+            return $this->json([
+                'errors' => [
+                    'Movie belongs to another user',
+                ],
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         return $this->json($this->formatMovie($movie));
     }
 
@@ -57,8 +71,11 @@ class MovieController extends AbstractController
      */
     public function add(Request $request, MovieFactory $movieFactory): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            $movie = $movieFactory->createFromRequest($request->toArray());
+            $movie = $movieFactory->createFromRequest($user, $request->toArray());
         } catch (ValidationException $exception) {
             return $this->json([
                 'errors' => $exception->getErrors(),

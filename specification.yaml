@@ -11,7 +11,7 @@ paths:
             tags:
                 - movies
             responses:
-                200:
+                "200":
                     description: Successful response
                     content:
                         application/json:
@@ -19,6 +19,8 @@ paths:
                                 type: array
                                 items:
                                     $ref: "#/components/schemas/MovieObject"
+                "401":
+                    description: Unauthorized request
         post:
             tags:
                 - movies
@@ -33,10 +35,12 @@ paths:
                                 $ref: "#/components/schemas/MovieObject"
                 "400":
                     description: Invalid request
-                    content: 
+                    content:
                         application/josn:
-                            schema: 
+                            schema:
                                 $ref: "#/components/schemas/ErrorObject"
+                "401":
+                    description: Unauthorized request
     /movies/{id}:
         get:
             parameters:
@@ -49,12 +53,20 @@ paths:
             tags:
                 - movies
             responses:
-                200:
+                "200":
                     description: "Successful response"
                     content:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/MovieObject"
+                "401":
+                    description: Unauthorized request
+                "403":
+                    description: Forbidden request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ForbiddenObject"
 components:
     requestBodies:
         CreateMovie:
@@ -138,4 +150,11 @@ components:
                         release_date:
                             type: string
                             example: "This value is not valid."
-                        
+        
+        ForbiddenObject:
+            properties:
+                errors:
+                    type: array
+                    items:
+                        type: string
+                        example: "Movie belongs to another user"

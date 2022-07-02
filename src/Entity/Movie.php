@@ -44,6 +44,12 @@ class Movie
      */
     private $movieRating;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="movies")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private User $user;
+
     public function __construct()
     {
         $this->movieCasts = new ArrayCollection();
@@ -133,6 +139,18 @@ class Movie
         }
 
         $this->movieRating = $movieRating;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
 
         return $this;
     }

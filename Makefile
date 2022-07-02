@@ -65,3 +65,6 @@ test: ## Run phpunit tests
 init-database: ## Create database
 	@$(SYMFONY) doctrine:database:create
 	@$(SYMFONY) --env=test doctrine:database:create
+
+init-fixtures: ## Initialize fixtures for testing
+	@$(SYMFONY) --env=test doctrine:fixtures:load
