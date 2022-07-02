@@ -5,6 +5,7 @@ namespace App\Tests\Factory;
 use App\Entity\Movie;
 use App\Entity\MovieCast;
 use App\Entity\MovieRating;
+use App\Entity\User;
 use App\Factory\MovieFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\Builder\InvocationMocker;
@@ -43,7 +44,7 @@ class MovieFactoryCreationTest extends KernelTestCase
 
         $movieFactory = new MovieFactory($this->getValidatorMock(), $entityManagerMock);
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     public function testCorrectDirectorFieldSetting(): void
@@ -76,7 +77,7 @@ class MovieFactoryCreationTest extends KernelTestCase
 
         $movieFactory = new MovieFactory($this->getValidatorMock(), $entityManagerMock);
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     public function testCorrectReleaseDateFieldSetting(): void
@@ -109,7 +110,7 @@ class MovieFactoryCreationTest extends KernelTestCase
 
         $movieFactory = new MovieFactory($this->getValidatorMock(), $entityManagerMock);
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     public function testCorrectCastsSetting(): void
@@ -144,7 +145,7 @@ class MovieFactoryCreationTest extends KernelTestCase
 
         $movieFactory = new MovieFactory($this->getValidatorMock(), $entityManagerMock);
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     public function testCorrectRatingSetting(): void
@@ -179,7 +180,7 @@ class MovieFactoryCreationTest extends KernelTestCase
 
         $movieFactory = new MovieFactory($this->getValidatorMock(), $entityManagerMock);
 
-        $movieFactory->createFromRequest($request);
+        $movieFactory->createFromRequest($this->getUserMock(), $request);
     }
 
     /**
@@ -198,5 +199,10 @@ class MovieFactoryCreationTest extends KernelTestCase
             });
 
         return $mock;
+    }
+
+    private function getUserMock(): User
+    {
+        return $this->createMock(User::class);
     }
 }

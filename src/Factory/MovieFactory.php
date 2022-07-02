@@ -5,6 +5,7 @@ namespace App\Factory;
 use App\Entity\Movie;
 use App\Entity\MovieCast;
 use App\Entity\MovieRating;
+use App\Entity\User;
 use App\Exception\ValidationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -24,14 +25,15 @@ class MovieFactory
     /**
      * @throws ValidationException
      */
-    public function createFromRequest(array $request): Movie
+    public function createFromRequest(User $user, array $request): Movie
     {
         $this->validateRequest($request);
 
         $movie = (new Movie())
             ->setName($request['name'])
             ->setDirector($request['director'])
-            ->setReleaseDate($request['release_date']);
+            ->setReleaseDate($request['release_date'])
+            ->setUser($user);
 
         $this->createMovieCasts($movie, $request['casts']);
         $this->createMovieRating($movie, $request['ratings']);
