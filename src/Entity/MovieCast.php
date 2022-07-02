@@ -15,18 +15,18 @@ class MovieCast
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id;
 
     /**
      * @ORM\ManyToOne(targetEntity=Movie::class, inversedBy="movieCasts")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $movie;
+    private ?Movie $movie;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private ?string $name;
 
     public function getId(): ?int
     {

@@ -40,14 +40,13 @@ class Movie
     private $movieCasts;
 
     /**
-     * @ORM\OneToMany(targetEntity=MovieRating::class, mappedBy="movie")
+     * @ORM\OneToOne(targetEntity=MovieRating::class, mappedBy="movie", cascade={"persist", "remove"})
      */
-    private $movieRatings;
+    private $movieRating;
 
     public function __construct()
     {
         $this->movieCasts = new ArrayCollection();
-        $this->movieRatings = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -121,32 +120,19 @@ class Movie
         return $this;
     }
 
-    /**
-     * @return Collection<int, MovieRating>
-     */
-    public function getMovieRatings(): Collection
+    public function getMovieRating(): MovieRating
     {
-        return $this->movieRatings;
+        return $this->movieRating;
     }
 
-    public function addMovieRating(MovieRating $movieRating): self
+    public function setMovieRating(MovieRating $movieRating): self
     {
-        if (!$this->movieRatings->contains($movieRating)) {
-            $this->movieRatings[] = $movieRating;
+        // set the owning side of the relation if necessary
+        if ($movieRating->getMovie() !== $this) {
             $movieRating->setMovie($this);
         }
 
-        return $this;
-    }
-
-    public function removeMovieRating(MovieRating $movieRating): self
-    {
-        if ($this->movieRatings->removeElement($movieRating)) {
-            // set the owning side to null (unless already changed)
-            if ($movieRating->getMovie() === $this) {
-                $movieRating->setMovie(null);
-            }
-        }
+        $this->movieRating = $movieRating;
 
         return $this;
     }

@@ -15,39 +15,27 @@ class MovieRating
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Movie::class, inversedBy="movieRatings")
+     * @ORM\Column(type="float", nullable=true)
+     */
+    private ?float $imdb;
+
+    /**
+     * @ORM\Column(type="float", nullable=true)
+     */
+    private ?float $rottenTomatto;
+
+    /**
+     * @ORM\OneToOne(targetEntity=Movie::class, inversedBy="movieRating", cascade={"persist", "remove"})
      * @ORM\JoinColumn(nullable=false)
      */
     private $movie;
 
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     */
-    private $imdb;
-
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     */
-    private $rottenTomatto;
-
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getMovie(): ?Movie
-    {
-        return $this->movie;
-    }
-
-    public function setMovie(?Movie $movie): self
-    {
-        $this->movie = $movie;
-
-        return $this;
     }
 
     public function getImdb(): ?float
@@ -70,6 +58,18 @@ class MovieRating
     public function setRottenTomatto(?float $rottenTomatto): self
     {
         $this->rottenTomatto = $rottenTomatto;
+
+        return $this;
+    }
+
+    public function getMovie(): ?Movie
+    {
+        return $this->movie;
+    }
+
+    public function setMovie(Movie $movie): self
+    {
+        $this->movie = $movie;
 
         return $this;
     }

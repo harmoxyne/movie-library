@@ -31,6 +31,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/MovieObject"
+                "400":
+                    description: Invalid request
+                    content: 
+                        application/josn:
+                            schema: 
+                                $ref: "#/components/schemas/ErrorObject"
     /movies/{id}:
         get:
             parameters:
@@ -115,3 +121,21 @@ components:
                         rotten_tomatto:
                             type: number
                             example: 8.2
+        ErrorObject:
+            properties:
+                errors:
+                    type: object
+                    properties:
+                        name:
+                            type: string
+                            example: "This field is missing."
+                        director:
+                            type: string
+                            example: "This field is missing."
+                        casts:
+                            type: string
+                            example: "This collection should contain 1 element or more."
+                        release_date:
+                            type: string
+                            example: "This value is not valid."
+                        
