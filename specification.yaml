@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+    title: Movies Library
+    description: A simple library that will allow you to save and view list of movies
+    version: 1.0.0
+servers:
+    -   url: 'https://localhost/api/v1'
+paths:
+    /movies:
+        get:
+            tags:
+                - movies
+            responses:
+                200:
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/MovieObject"
+        post:
+            tags:
+                - movies
+            requestBody:
+                $ref: "#/components/requestBodies/CreateMovie"
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MovieObject"
+                "400":
+                    description: Invalid request
+                    content: 
+                        application/josn:
+                            schema: 
+                                $ref: "#/components/schemas/ErrorObject"
+    /movies/{id}:
+        get:
+            parameters:
+                -   in: path
+                    name: id
+                    schema:
+                        type: integer
+                    required: true
+                    description: Numeric ID of the movie to get
+            tags:
+                - movies
+            responses:
+                200:
+                    description: "Successful response"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MovieObject"
+components:
+    requestBodies:
+        CreateMovie:
+            description: "Payload to create movie"
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/CreateMovieObject"
+    
+    schemas:
+        MovieObject:
+            properties:
+                id:
+                    type: integer
+                    example: 1
+                name:
+                    type: string
+                    example: "The Titanic"
+                casts:
+                    type: array
+                    items:
+                        type: string
+                        example: "DiCaprio"
+                release_date:
+                    type: string
+                    format: date
+                    example: "18-01-1998"
+                director:
+                    type: string
+                    example: "James Cameron"
+                ratings:
+                    type: object
+                    properties:
+                        imdb:
+                            type: number
+                            example: 7.8
+                        rotten_tomatto:
+                            type: number
+                            example: 8.2
+        CreateMovieObject:
+            properties:
+                name:
+                    type: string
+                    example: "The Titanic"
+                casts:
+                    type: array
+                    items:
+                        type: string
+                        example: "DiCaprio"
+                release_date:
+                    type: string
+                    format: date
+                    example: "18-01-1998"
+                director:
+                    type: string
+                    example: "James Cameron"
+                ratings:
+                    type: object
+                    properties:
+                        imdb:
+                            type: number
+                            example: 7.8
+                        rotten_tomatto:
+                            type: number
+                            example: 8.2
+        ErrorObject:
+            properties:
+                errors:
+                    type: object
+                    properties:
+                        name:
+                            type: string
+                            example: "This field is missing."
+                        director:
+                            type: string
+                            example: "This field is missing."
+                        casts:
+                            type: string
+                            example: "This collection should contain 1 element or more."
+                        release_date:
+                            type: string
+                            example: "This value is not valid."
+                        
