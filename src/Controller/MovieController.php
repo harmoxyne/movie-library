@@ -8,12 +8,14 @@ use App\Entity\MovieRating;
 use App\Entity\User;
 use App\Exception\ValidationException;
 use App\Factory\MovieFactory;
+use App\Message\SendEmailMessage;
 use App\Repository\MovieRepository;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -69,7 +71,7 @@ class MovieController extends AbstractController
     /**
      * @Route("/movies", name="app_movie_add", methods={"POST"})
      */
-    public function add(Request $request, MovieFactory $movieFactory): JsonResponse
+    public function add(Request $request, MovieFactory $movieFactory, MessageBusInterface $bus): JsonResponse
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -81,6 +83,8 @@ class MovieController extends AbstractController
                 'errors' => $exception->getErrors(),
             ], Response::HTTP_BAD_REQUEST);
         }
+
+        $bus->dispatch(new SendEmailMessage($user->getId(), $movie->getId()));
 
         return $this->json($this->formatMovie($movie), Response::HTTP_CREATED);
     }
