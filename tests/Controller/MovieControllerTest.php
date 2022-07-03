@@ -354,7 +354,23 @@ class MovieControllerTest extends WebTestCase
 
     public function testSuccessfulGetMovies(): void
     {
-        $this->enableUser();
+        $user = $this->enableUser();
+
+        /** @var MovieFactory $movieFactory */
+        $movieFactory = static::getContainer()->get(MovieFactory::class);
+        $movieFactory->createFromRequest($user, [
+            'name' => 'The Titanic',
+            'release_date' => '18-01-1998',
+            'director' => 'James Cameron',
+            'casts' => [
+                'DiCaprio',
+                'Kate Winslet',
+            ],
+            'ratings' => [
+                'imdb' => 7.8,
+                'rotten_tomatto' => 8.2,
+            ],
+        ]);
 
         $response = $this->callGetMovies();
 
@@ -372,6 +388,51 @@ class MovieControllerTest extends WebTestCase
             self::assertArrayHasKey('ratings', $movie, 'Response does not contain "ratings" object for entry #'.$id);
 
         }
+    }
+
+    public function testUserCanSeeOnlyMoviesCreatedByHimself(): void
+    {
+        $user = $this->enableUser();
+        $anotherUser = $this->getUser(1);
+
+        /** @var MovieFactory $movieFactory */
+        $movieFactory = static::getContainer()->get(MovieFactory::class);
+        $expectedMovie = $movieFactory->createFromRequest($user, [
+            'name' => 'The Titanic',
+            'release_date' => '18-01-1998',
+            'director' => 'James Cameron',
+            'casts' => [
+                'DiCaprio',
+                'Kate Winslet',
+            ],
+            'ratings' => [
+                'imdb' => 7.8,
+                'rotten_tomatto' => 8.2,
+            ],
+        ]);
+
+        $movieFactory->createFromRequest($anotherUser, [
+            'name' => 'The Titanic1',
+            'release_date' => '18-01-1998',
+            'director' => 'James Cameron',
+            'casts' => [
+                'DiCaprio',
+                'Kate Winslet',
+            ],
+            'ratings' => [
+                'imdb' => 7.8,
+                'rotten_tomatto' => 8.2,
+            ],
+        ]);
+
+        $response = $this->callGetMovies();
+        self::assertResponseIsSuccessful();
+
+        $responseData = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertCount(1, $responseData, 'Response contains more than 1 movie');
+        self::assertEquals($expectedMovie->getId(), $responseData[0]['id'],
+            'Response contains different movie than expected');
     }
 
     private function callCreateMovie(array $payload): Response
