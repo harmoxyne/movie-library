@@ -65,12 +65,13 @@ jobs:
           bin/console about
 
       ## —— Tests ✅ ———————————————————————————————————————————————————————————
-      # We use the dev env here
       - name: Load Doctrine fixtures
         run: |
-          bin/console doctrine:fixtures:load
+          bin/console --env=test doctrine:database:create --if-not-exists -q
+          bin/console --env=test doctrine:migrations:migrate --no-interaction
+          bin/console --env=test doctrine:fixtures:load --no-interaction
 
-      - name: Run functionnal and unit tests
+      - name: Run functional and unit tests
         run: |
           cp phpunit.xml.dist phpunit.xml
           bin/phpunit

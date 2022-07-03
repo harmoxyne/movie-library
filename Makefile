@@ -54,8 +54,8 @@ cc: c=c:c ## Clear the cache
 cc: sf
 
 migrate: ## Run migrations on both development and test environments
-	@$(SYMFONY) doctrine:migrations:migrate
-	@$(SYMFONY) --env=test doctrine:migrations:migrate
+	@$(SYMFONY) doctrine:migrations:migrate --no-interaction
+	@$(SYMFONY) --env=test doctrine:migrations:migrate --no-interaction
 
 ## —— Tests  ———————————————————————————————————————————————————————————————
 test: ## Run phpunit tests
