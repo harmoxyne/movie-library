@@ -5,6 +5,8 @@ info:
     version: 1.0.0
 servers:
     -   url: 'https://localhost/api/v1'
+security:
+    -   basicAuth: [ ]
 paths:
     /movies:
         get:
@@ -68,6 +70,10 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/ForbiddenObject"
 components:
+    securitySchemes:
+        basicAuth:
+            type: https
+            scheme: basic
     requestBodies:
         CreateMovie:
             description: "Payload to create movie"
