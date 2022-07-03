@@ -9,6 +9,12 @@ docker usage questions (also check ./docker folder for useful tips).
 * docker-compose
 * make
 
+# Documentation
+
+Check [OpenAPI specification](specification.yaml) for endpoints details
+
+You can also import Postman collection from ./postman/postman_collection.json which contains all available routes
+
 # Start project
 
 1. In project root run command to pull container data
@@ -44,7 +50,7 @@ $ make sf c="app:create-user"
 $ make consumer
 ```
 
-## Testing
+# Testing
 
 After successfully performing steps needed in **Start** section, fill tests database with fixtures:
 
