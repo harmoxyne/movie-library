@@ -4,14 +4,18 @@ namespace App\Tests\Controller;
 
 use App\Entity\User;
 use App\Factory\MovieFactory;
+use App\Message\SendEmailMessage;
 use App\Repository\UserRepository;
 use JsonException;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
+use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
 class MovieControllerTest extends WebTestCase
 {
+    use InteractsWithMessenger;
+
     private KernelBrowser $client;
 
     protected function setUp(): void
@@ -99,6 +103,42 @@ class MovieControllerTest extends WebTestCase
             'Response "ratings.imdb" contain different value than expected');
         self::assertEquals($expectedRatings['rotten_tomatto'], $responseData['ratings']['rotten_tomatto'],
             'Response "ratings.rotten_tomatto" contain different value than expected');
+    }
+
+    public function testSuccessfulMovieCreationTriggerSendEmailMessage(): void
+    {
+        $user = $this->enableUser();
+
+        $payload = [
+            'name' => 'The Titanic',
+            'release_date' => '18-01-1998',
+            'director' => 'James Cameron',
+            'casts' => [
+                'DiCaprio',
+                'Kate Winslet',
+            ],
+            'ratings' => [
+                'imdb' => 7.8,
+                'rotten_tomatto' => 8.2,
+            ],
+        ];
+
+        $response = $this->callCreateMovie($payload);
+        $responseData = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertArrayHasKey('id', $responseData, 'Response does not contain "id" field');
+        $expectedUserId = $user->getId();
+        $expectedMovieId = $responseData['id'];
+
+        $this->messenger()->queue()->assertNotEmpty();
+        $this->messenger()->queue()->assertCount(1);
+        $this->messenger()->queue()->assertContains(SendEmailMessage::class);
+
+        /** @var SendEmailMessage $actualMessage */
+        $actualMessage = $this->messenger()->queue()->messages(SendEmailMessage::class)[0];
+
+        self::assertEquals($expectedUserId, $actualMessage->getUserId());
+        self::assertEquals($expectedMovieId, $actualMessage->getMovieId());
     }
 
     public function invalidRequestDataProvider(): array

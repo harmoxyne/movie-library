@@ -68,3 +68,7 @@ init-database: ## Create database
 
 init-fixtures: ## Initialize fixtures for testing
 	@$(SYMFONY) --env=test doctrine:fixtures:load
+
+## —— Events  ———————————————————————————————————————————————————————————————
+consumer: ## Run consumer for events
+	@$(SYMFONY) messenger:consume async -vv
