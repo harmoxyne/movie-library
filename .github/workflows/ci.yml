@@ -68,10 +68,10 @@ jobs:
       # We use the dev env here
       - name: Load Doctrine fixtures
         run: |
-          make init-database
-          make init-fixtures
+          bin/console doctrine:database:create
+          bin/console doctrine:fixtures:load
 
       - name: Run functionnal and unit tests
         run: |
           cp phpunit.xml.dist phpunit.xml
-          make test
+          bin/phpunit
