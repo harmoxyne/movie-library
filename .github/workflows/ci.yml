@@ -1,31 +1,77 @@
 name: CI
-
 on:
-    push:
-    pull_request:
-
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 jobs:
-    build:
-        name: Docker build
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v2
-            - name: Pull images
-              run: docker-compose pull
-            - name: Start services
-              run: docker-compose up --build -d
-            - name: Wait for services
-              run: |
-                  while status="$(docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" "$(docker-compose ps -q php)")"; do
-                    case $status in
-                      starting) sleep 1;;
-                      healthy) exit 0;;
-                      unhealthy) exit 1;;
-                    esac
-                  done
-                  exit 1
-            - name: Check HTTP reachability
-              run: curl http://localhost
-            - name: Check HTTPS reachability
-              run: curl -k https://localhost
+  symfony:
+    name: Symfony 5.4 (PHP ${{ matrix.php-versions }})
+    # https://hub.docker.com/_/ubuntu/
+    runs-on: ubuntu-20.04
+    services:
+      # https://docs.docker.com/samples/library/mysql/
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_DB: app
+          POSTGRES_PASSWORD: ChangeMe
+          POSTGRES_USER: symfony
+        ports:
+          - 5432:5432
+    strategy:
+      fail-fast: true
+      matrix:
+        php-versions: [ '7.4', '8.0', '8.1' ]
+    steps:
+      # —— Setup Github actions 🐙 —————————————————————————————————————————————
+      # https://github.com/actions/checkout (official)
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # https://github.com/shivammathur/setup-php (community)
+      - name: Setup PHP, extensions and composer with shivammathur/setup-php
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_pgsql, dom, filter, gd, iconv, json, mbstring
+        env:
+          update: true
+
+      - name: Check PHP Version
+        run: php -v
+
+      # —— Composer 🧙‍️ —————————————————————————————————————————————————————————
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist
+
+      # —— Symfony 🎵 ——————————————————————————————————————————————————————————
+      - name: Check the Symfony console
+        run: |
+          bin/console about
+
+      ## —— Tests ✅ ———————————————————————————————————————————————————————————
+      - name: Load Doctrine fixtures
+        run: |
+          bin/console --env=test doctrine:database:create --if-not-exists -q
+          bin/console --env=test doctrine:migrations:migrate --no-interaction
+          bin/console --env=test doctrine:fixtures:load --no-interaction
+
+      - name: Run functional and unit tests
+        run: |
+          cp phpunit.xml.dist phpunit.xml
+          bin/phpunit
